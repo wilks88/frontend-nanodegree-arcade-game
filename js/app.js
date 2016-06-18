@@ -5,17 +5,21 @@ const X_MAX = 400;
 const X_MIN = 0;
 const Y_MAX = 380;
 const Y_MIN = 0;
-const WATER_BOUNDARY = 50;
+const GOAL_BOUNDARY = 50;
 
 /**************
 // enemy class
 **************/
-// arg is y location for proper positioning
+// arg is y location for proper positioning on canvas
 var Enemy = function(y) {
-    // x is negative for spawning and wrapping to appear more natural
+    // x is negative for spawning/wrapping to appear more natural
     this.x = -100;
     this.y = y;
     this.speed = this.getSpeed();
+
+    // defines hitbox for collision
+    this.width = 45;
+    this.height = 30;
 
     // The image/sprite for our enemies, this uses
     // a helper we've provided to easily load images
@@ -35,17 +39,11 @@ Enemy.prototype.update = function(dt) {
         this.speed = this.getSpeed();
         this.x = -100;
     };
-    return this.x;
 };
 
 // Draw the enemy on the screen, required method for game
 Enemy.prototype.render = function() {
     ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
-};
-
-// handles enemy collision with player
-Enemy.prototype.collision = function() {
-    // TODO: implement collision detection
 };
 
 // gets a random speed for the enemy
@@ -61,29 +59,37 @@ Enemy.prototype.getSpeed = function() {
 var Player = function() {
     // sets player start location
     this.respawn();
+
     // how fast the player can move
     this.stepX = 50;
     this.stepY = 80;
-    // sets initial image for player character
-    this.sprite = 'images/char-horn-girl.png';
+
+    // defines hitbox for collision
+    this.width = 10;
+    this.height = 10;
+
+    // sets image for player character
+    this.sprite = this.getCostume();
 };
 
 // updates the player's position
 Player.prototype.update = function() {
-    // reset player and change costume if they touch the water
-    if (this.y < WATER_BOUNDARY) {
+    // resets player and changes costume if they reach goal
+    this.checkCollision(allEnemies);
+    if (this.y < GOAL_BOUNDARY) {
         this.respawn();
         this.getCostume();
-        return this.x, this.y;
+        console.log('goal reached');
     };
 };
 
-// draws player on the screen
+// draws player on the canvas
 Player.prototype.render = function() {
     ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
 };
 
 // detects input to move player character
+// see event listener on handling input for arg e
 Player.prototype.handleInput = function(e) {
     // keeps player on canvas
     if (e === 'left' && this.x > X_MIN) {
@@ -98,12 +104,39 @@ Player.prototype.handleInput = function(e) {
     if (e === 'down' && this.y < Y_MAX) {
         this.y += this.stepY;
     };
+    console.log('X: ' + this.x + ' Y: ' + this.y);
 };
 
-// respawns player to start point
+// respawns player at start point
 Player.prototype.respawn = function() {
     this.x = 200;
     this.y = 380;
+};
+
+// checks to see if the player collided with an object
+Player.prototype.checkCollision = function(collider) {
+    // handles collision with objects in an array, loops appropriately
+    if (Array.isArray(collider)){
+        for (var i = 0; i < collider.length; i++) {
+            if(collider[i].x + collider[i].width >= this.x &&
+               collider[i].x <= this.x + this.width &&
+               collider[i].y + collider[i].height >= this.y &&
+               collider[i].y <= this.y + this.height) {
+                this.respawn();
+                console.log('collision detected');
+            }
+        }
+    }
+    // handles collision with a single object
+    else {
+        if (collider.x + collider.width >= this.x &&
+            collider.x <= this.x + this.width &&
+            collider.y + collider.height >= this.y &&
+            collider.y <= this.y + this.height) {
+            this.respawn();
+            console.log('collision detected');
+        }
+    }
 };
 
 // gets a random costume, for variety yaayyy
@@ -123,14 +156,16 @@ Player.prototype.getCostume = function() {
     }
     else if (costume === 5) {
         this.sprite = 'images/char-princess-girl.png';
-    }
+    };
     return this.sprite;
 };
 
 /*******************************************************/
-// Now instantiate your objects.
-// Place all enemy objects in an array called allEnemies
-// Place the player object in a variable called player
+// instantiate objects
+// Place all enemy objects in an array called allEnemies.
+// Place the player object in a variable called player.
+// Enemies should have fixed y for proper placement on canvas,
+// relative to sprites being used.
 var allEnemies = [];
 var player = new Player();
 var enemy1 = new Enemy(225);
@@ -148,6 +183,5 @@ document.addEventListener('keyup', function(e) {
         39: 'right',
         40: 'down'
     };
-
     player.handleInput(allowedKeys[e.keyCode]);
 });
