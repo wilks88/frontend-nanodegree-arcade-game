@@ -7,10 +7,10 @@ const Y_MAX = 380;
 const Y_MIN = 0;
 const GOAL_BOUNDARY = 50;
 
-/**************
-// enemy class
-**************/
-// arg is y location for proper positioning on canvas
+/*********************************
+// enemy class - player must avoid
+// takes y-coord is a parameter
+*********************************/
 var Enemy = function(y) {
     // x is negative for spawning/wrapping to appear more natural
     this.x = -100;
@@ -38,7 +38,7 @@ Enemy.prototype.update = function(dt) {
     if (this.x > 505) {
         this.speed = this.getSpeed();
         this.x = -100;
-    };
+    }
 };
 
 // Draw the enemy on the screen, required method for game
@@ -74,13 +74,15 @@ var Player = function() {
 
 // updates the player's position
 Player.prototype.update = function() {
-    // resets player and changes costume if they reach goal
+    // resets player if the collide with an object
     this.checkCollision(allEnemies);
+
+    // resets player if the reach the goal and changes costume
     if (this.y < GOAL_BOUNDARY) {
         this.respawn();
         this.getCostume();
         console.log('goal reached');
-    };
+    }
 };
 
 // draws player on the canvas
@@ -94,16 +96,16 @@ Player.prototype.handleInput = function(e) {
     // keeps player on canvas
     if (e === 'left' && this.x > X_MIN) {
         this.x -= this.stepX;
-    };
+    }
     if (e === 'right' && this.x < X_MAX) {
         this.x += this.stepX;
-    };
+    }
     if (e === 'up' && this.y > Y_MIN) {
         this.y -= this.stepY;
-    };
+    }
     if (e === 'down' && this.y < Y_MAX) {
         this.y += this.stepY;
-    };
+    }
     console.log('X: ' + this.x + ' Y: ' + this.y);
 };
 
@@ -156,9 +158,15 @@ Player.prototype.getCostume = function() {
     }
     else if (costume === 5) {
         this.sprite = 'images/char-princess-girl.png';
-    };
+    }
     return this.sprite;
 };
+
+/*
+// rock class
+// TODO: implement - used to block the player
+// will likely put in goal to make game more challenging
+*/
 
 /*******************************************************/
 // instantiate objects
